@@ -15,11 +15,11 @@ def handle_eks_yaml(file_path, options):
         
         # Assuming options is a list of selected configuration options
         if 'Service Account' in options:
-            add_configuration(file_path, microservice_name, 'service-account.yaml')
+            add_configuration(file_path, microservice_name, 'templates/service-account.yaml')
             logging.info("Configurations added successfully!")
             print("Configurations added successfully!")
         if 'Ingress' in options:
-            add_configuration(file_path, microservice_name, 'ingress.yaml')
+            add_configuration(file_path, microservice_name, 'templates/ingress.yaml')
             logging.info("Configurations added successfully!")
             print("Configurations added successfully!")
 
@@ -62,7 +62,6 @@ def add_configuration(file_path, microservice_name, template_path):
         configuration_yaml = template.replace('{{microservice_name}}', microservice_name)
         try:
             with open(file_path, 'a') as file:
-                file.write("\n---\n")  # Ensure configurations are separated by a line
                 file.write(configuration_yaml)
             logger.info(f"Added configuration from {template_path} to {file_path}")
         except IOError as e:

@@ -55,8 +55,8 @@ def main():
             sys.exit(0)
 
         option_map = {
-            'Service Account': 'service_account',
-            'Ingress': 'ingress',
+            'Service Account': 'Service Account',
+            'Ingress': 'Ingress',
         }
 
         options = [option_map[config] for config in selected_configs]
