@@ -5,14 +5,28 @@ import re
 # Set up logging
 logger = logging.getLogger(__name__)
 
-def load_template(file_path):
-    """Load the YAML template from a file."""
+def handle_eks_yaml(file_path, options):
+    """Handle modifications to the YAML file based on user-selected options."""
     try:
-        with open(file_path, 'r') as file:
-            return file.read()
-    except FileNotFoundError:
-        logger.error(f"File '{file_path}' not found.")
-        return None
+        microservice_name = get_microservice_name(file_path)
+        if not microservice_name:
+            logger.error("Microservice name could not be extracted.")
+            return
+        
+        # Assuming options is a list of selected configuration options
+        if 'Service Account' in options:
+            add_configuration(file_path, microservice_name, 'service-account.yaml')
+            logging.info("Configurations added successfully!")
+            print("Configurations added successfully!")
+        if 'Ingress' in options:
+            add_configuration(file_path, microservice_name, 'ingress.yaml')
+            logging.info("Configurations added successfully!")
+            print("Configurations added successfully!")
+
+                
+    except Exception as e:
+        logger.exception("Error handling EKS YAML:")
+        raise
 
 def get_microservice_name(file_path):
     """Extract the microservice name from the EKS YAML file."""
@@ -40,7 +54,7 @@ def get_microservice_name(file_path):
         logger.error("An unexpected error occurred:")
         logger.error(f"Unexpected Error: {e}")
     return microservice_name
-
+            
 def add_configuration(file_path, microservice_name, template_path):
     """Add the specified configuration to the YAML file."""
     template = load_template(template_path)
@@ -54,22 +68,11 @@ def add_configuration(file_path, microservice_name, template_path):
         except IOError as e:
             logger.error(f"Error writing to file '{file_path}': {e}")
 
-
-
-def handle_eks_yaml(file_path, options):
-    """Handle modifications to the YAML file based on user-selected options."""
+def load_template(file_path):
+    """Load the YAML template from a file."""
     try:
-        microservice_name = get_microservice_name(file_path)
-        if not microservice_name:
-            logger.error("Microservice name could not be extracted.")
-            return
-        
-        # Assuming options is a list of selected configuration options
-        if 'Service Account' in options:
-            add_configuration(file_path, microservice_name, 'service-account.yaml')
-        if 'Ingress' in options:
-            add_configuration(file_path, microservice_name, 'ingress.yaml')
-        
-    except Exception as e:
-        logger.exception("Error handling EKS YAML:")
-        raise
+        with open(file_path, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        logger.error(f"File '{file_path}' not found.")
+        return None

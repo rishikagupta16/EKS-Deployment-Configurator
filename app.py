@@ -64,9 +64,6 @@ def main():
         # Handle the YAML modifications based on the user's selection
         handle_eks_yaml(yaml_file_path, options)
 
-        logging.info("Configurations added successfully!")
-        print("Configurations added successfully!")
-
     except Exception as e:
         logging.exception("An unexpected error occurred:")
         print("An unexpected error occurred. Check the log file for details.")
