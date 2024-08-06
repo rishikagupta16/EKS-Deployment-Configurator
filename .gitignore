@@ -1,4 +1,3 @@
-.venv/
 eks_configurator.log
 eks-deployment.yaml
 __pycache__/

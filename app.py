@@ -26,10 +26,18 @@ def get_user_selection():
         print(f"{key}. {value}")
 
     selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2): ")
+    selected_options = selected_options.strip()
 
-    selected_keys = selected_options.split(',')
-    selected_configs = [options[key.strip()] for key in selected_keys if key.strip() in options]
+    if not selected_options:
+        logging.error("No options selected.")
+        return []
 
+    selected_keys = [key.strip() for key in selected_options.split(',')]
+    selected_configs = [options.get(key) for key in selected_keys if key in options]
+
+    if not selected_configs:
+        logging.error("Invalid options selected.")
+    
     return selected_configs
 
 def main():
@@ -47,22 +55,29 @@ def main():
             print(f"Error: '{yaml_file_name}' not found in the current directory.")
             sys.exit(1)
 
-        selected_configs = get_user_selection()
-
-        if not selected_configs:
-            logging.info("No valid configurations selected. Exiting.")
-            print("No valid configurations selected. Exiting.")
-            sys.exit(0)
-
         option_map = {
             'Service Account': 'Service Account',
             'Ingress': 'Ingress',
         }
 
-        options = [option_map[config] for config in selected_configs]
+        while True:
+            selected_configs = get_user_selection()
 
-        # Handle the YAML modifications based on the user's selection
-        handle_eks_yaml(yaml_file_path, options)
+            if not selected_configs:
+                logging.info("No valid configurations selected.")
+                print("No valid configurations selected.")
+
+            options = [option_map[config] for config in selected_configs]
+
+            # Handle the YAML modifications based on the user's selection
+            handle_eks_yaml(yaml_file_path, options)
+
+            logging.info("Configurations added successfully!")
+            print("Configurations added successfully!")
+
+            continue_choice = input("Do you want to add another configuration? (yes/no): ").strip().lower()
+            if continue_choice != 'yes':
+                break
 
     except Exception as e:
         logging.exception("An unexpected error occurred:")
