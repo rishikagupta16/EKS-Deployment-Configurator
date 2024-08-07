@@ -5,7 +5,7 @@ import re
 # Set up logging
 logger = logging.getLogger(__name__)
 
-def handle_eks_yaml(file_path, options):
+def handle_eks_yaml(file_path, options, ingress_path=None):
     """Handle modifications to the YAML file based on user-selected options."""
     try:
         microservice_name = get_microservice_name(file_path)
@@ -13,13 +13,14 @@ def handle_eks_yaml(file_path, options):
             logger.error("Microservice name could not be extracted.")
             return
         
-        # Assuming options is a list of selected configuration options
         if 'Service Account' in options:
             add_configuration(file_path, microservice_name, 'templates/service-account.yaml')
         if 'Ingress' in options:
-            add_configuration(file_path, microservice_name, 'templates/ingress.yaml')
+            if not ingress_path:
+                logger.error("Ingress path is required but not provided.")
+                return
+            add_configuration(file_path, microservice_name, 'templates/ingress.yaml', ingress_path)
 
-                
     except Exception as e:
         logger.exception("Error handling EKS YAML:")
         raise
@@ -50,21 +51,29 @@ def get_microservice_name(file_path):
         logger.error("An unexpected error occurred:")
         logger.error(f"Unexpected Error: {e}")
     return microservice_name
-            
-def add_configuration(file_path, microservice_name, template_path):
+
+def add_configuration(file_path, microservice_name, template_path, ingress_path=None):
     """Add the specified configuration to the YAML file."""
     template = load_template(template_path)
-    if template:
-        configuration_yaml = template.replace('{{microservice_name}}', microservice_name)
-        try:
-            with open(file_path, 'a') as file:
-                file.write(configuration_yaml)
-            logger.info(f"Added configuration from {template_path} to {file_path}")
-            logging.info("Configurations added successfully!")
-            print("Configurations added successfully!")
-        except IOError as e:
-            logger.error(f"Error writing to file '{file_path}': {e}")
-            logging.error("Error in adding configurations!")
+    if not template:
+        return
+
+    configuration_yaml = template.replace('{{microservice_name}}', microservice_name)
+    
+    if ingress_path:
+        configuration_yaml = configuration_yaml.replace('{{microservice_path}}', ingress_path)
+
+    try:
+        with open(file_path, 'a') as file:
+            file.write(configuration_yaml)
+        logger.info(f"Added configuration from {template_path} to {file_path}")
+        logging.info("Configurations added successfully!")
+        print("Configurations added successfully!")
+    except IOError as e:
+        logger.error(f"Error writing to file '{file_path}': {e}")
+        logging.error("Error in adding configurations!")
+
+
 
 def load_template(file_path):
     """Load the YAML template from a file."""

@@ -14,7 +14,6 @@ logging.basicConfig(
 )
 
 def get_user_selection():
-    print("Welcome to the EKS Deployment Configurator!")
     print("Please select the configurations you want to add:")
 
     options = {
@@ -39,6 +38,10 @@ def get_user_selection():
         logging.error("Invalid options selected.")
     
     return selected_configs
+
+def get_ingress_path():
+    ingress_path = input("Enter the path to be added in the Ingress configuration: ").strip()
+    return ingress_path
 
 def main():
     try:
@@ -66,11 +69,17 @@ def main():
             if not selected_configs:
                 logging.info("No valid configurations selected.")
                 print("No valid configurations selected.")
+                continue
 
-            options = [option_map[config] for config in selected_configs]
+            options = []
+            ingress_path = None
+            for config in selected_configs:
+                if config == 'Ingress':
+                    ingress_path = get_ingress_path()
+                options.append(option_map[config])
 
             # Handle the YAML modifications based on the user's selection
-            handle_eks_yaml(yaml_file_path, options)
+            handle_eks_yaml(yaml_file_path, options, ingress_path)
 
             logging.info("Configurations added successfully!")
             print("Configurations added successfully!")
