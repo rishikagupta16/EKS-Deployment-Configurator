@@ -19,12 +19,13 @@ def get_user_selection():
     options = {
         '1': 'Service Account',
         '2': 'Ingress',
+        '3': 'Config-map'
     }
 
     for key, value in options.items():
         print(f"{key}. {value}")
 
-    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2): ")
+    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2,3): ")
     selected_options = selected_options.strip()
 
     if not selected_options:
@@ -42,6 +43,37 @@ def get_user_selection():
 def get_ingress_path():
     ingress_path = input("Enter the path to be added in the Ingress configuration: ").strip()
     return ingress_path
+def get_configmap_options():
+    print("Please select the Configmap options you want to include:")
+
+    configmap_options = {
+        '1': ('API_PATH', "{{apiPath}}"),
+        '2': ('DB_URL', "{{dbUrl}}"),
+        '3': ('DB_NAME', "{{dbName}}"),
+        '4': ('DB_USER_NAME', "{{dbUserName}}"),
+        '5': ('S3_DIR_ADDRESS', "{{s3DirAddress}}"),
+        '6': ('S3_BUCKET_NAME', "{{s3BucketName}}"),
+        '7': ('MINIMUM_IDLE', "{{minimumIdle}}"),
+        '8': ('MAXIMUM_POOL_SIZE', "{{maximumPoolSize}}"),
+        '9': ('IDLE_TIMEOUT', "{{idleTimeout}}"),
+        '10': ('MAX_LIFETIME', "{{maxLifetime}}"),
+        '11': ('CONNECTION_TIMEOUT', "{{connectionTimeout}}")
+    }
+
+    for key, (option_name, _) in configmap_options.items():
+        print(f"{key}. {option_name}")
+
+    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,3,5): ").strip()
+    selected_keys = [key.strip() for key in selected_options.split(',')]
+    
+    configmap_inputs = {}
+
+    for key in selected_keys:
+        if key in configmap_options:
+            option_name, default_value = configmap_options[key]
+            configmap_inputs[option_name] = default_value
+
+    return configmap_inputs
 
 def main():
     try:
@@ -57,10 +89,10 @@ def main():
             logging.error(f"Error: '{yaml_file_name}' not found in the current directory.")
             print(f"Error: '{yaml_file_name}' not found in the current directory.")
             sys.exit(1)
-
         option_map = {
             'Service Account': 'Service Account',
             'Ingress': 'Ingress',
+            'Config-map': 'Config-map'
         }
 
         while True:
@@ -73,13 +105,17 @@ def main():
 
             options = []
             ingress_path = None
+            configmap_options = None
+            
             for config in selected_configs:
                 if config == 'Ingress':
                     ingress_path = get_ingress_path()
+                elif config == 'Config-map':  # Ensure this matches exactly with the key in option_map
+                    configmap_options = get_configmap_options()
                 options.append(option_map[config])
 
             # Handle the YAML modifications based on the user's selection
-            handle_eks_yaml(yaml_file_path, options, ingress_path)
+            handle_eks_yaml(yaml_file_path, options, ingress_path, configmap_options )
 
             logging.info("Configurations added successfully!")
             print("Configurations added successfully!")
@@ -88,6 +124,10 @@ def main():
             if continue_choice != 'yes':
                 break
 
+    except KeyError as e:
+        logging.exception(f"A KeyError occurred: {e}")
+        print(f"A KeyError occurred: {e}. Please check your input.")
+        sys.exit(1)
     except Exception as e:
         logging.exception("An unexpected error occurred:")
         print("An unexpected error occurred. Check the log file for details.")
