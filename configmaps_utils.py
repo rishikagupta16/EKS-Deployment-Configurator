@@ -5,6 +5,9 @@ from ruamel.yaml import YAML
 yaml = YAML()
 yaml.preserve_quotes = True
 yaml.default_flow_style = False 
+yaml.width = float('inf')
+yaml.indent(mapping=2, sequence=4, offset=2)
+
 logger = logging.getLogger(__name__)
 
 # Global dictionary to store placeholder values
