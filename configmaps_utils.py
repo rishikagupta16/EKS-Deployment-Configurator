@@ -33,15 +33,20 @@ def add_configmap_to_eks_deployment(file_path, microservice_name, configmap_opti
             if isinstance(doc, dict) and doc.get('kind') == 'Deployment':
                 container_spec = doc['spec']['template']['spec']['containers'][0]
                 env_vars = container_spec.get('env', [])
-                configmap_name = f'{microservice_name}-config'
+                last_configmap_index = None
+                for i, env_var in enumerate(env_vars):
+                    if 'configMapKeyRef' in env_var.get('valueFrom', {}):
+                        last_configmap_index = i
 
-                # Add new ConfigMap entries
+                if last_configmap_index is None:
+                    logger.warning("No existing ConfigMap entries found in the deployment.")
+
                 for config_key, default_value in configmap_options.items():
                     env_vars.append({
                         'name': config_key,
                         'valueFrom': {
                             'configMapKeyRef': {
-                                'name': configmap_name,
+                                'name': f'{microservice_name}-config',
                                 'key': config_key
                             }
                         }
@@ -51,7 +56,7 @@ def add_configmap_to_eks_deployment(file_path, microservice_name, configmap_opti
 
         # Dump YAML data back to file
         with open(file_path, 'w') as file:
-            yaml.dump_all(yaml_data, file, explicit_start=True, allow_unicode=True)
+            yaml.dump_all(yaml_data, file)
 
         # Replace placeholders with original values
         with open(file_path, 'r+') as file:
