@@ -1,0 +1,5 @@
+- name: API_PATH
+  valueFrom:
+    configMapKeyRef:
+      name: {{microservice_name}}-config
+      key: apiPath

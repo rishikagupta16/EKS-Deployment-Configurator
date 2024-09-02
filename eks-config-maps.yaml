@@ -1,0 +1,6 @@
+#Note: uncomment the below lines before configuring the properties. Key value should be used to configure properties and its values
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: itaap-hyperautomation-nar-pricing-upload
+ namespace: {{deployNamespace}}

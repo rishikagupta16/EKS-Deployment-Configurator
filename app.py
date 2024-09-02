@@ -110,7 +110,7 @@ def main():
             for config in selected_configs:
                 if config == 'Ingress':
                     ingress_path = get_ingress_path()
-                elif config == 'Config-map':  # Ensure this matches exactly with the key in option_map
+                elif config == 'Config-map': 
                     configmap_options = get_configmap_options()
                 options.append(option_map[config])
 
