@@ -1,5 +1,5 @@
-- name: API_PATH
+- name: {{configMap}}
   valueFrom:
     configMapKeyRef:
-      name: {{microservice_name}}-config
-      key: apiPath
+      name: {{configmap_name}}
+      key: {{configmap}}

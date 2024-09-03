@@ -95,8 +95,8 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
             return
 
         configmap_data = read_configmap_file(configmap_file_path)
-        uncommented_lines = uncomment_configmap_lines(configmap_data)
-        uncommented_lines = ensure_data_section(uncommented_lines, microservice_name)
+        uncommented_lines, full_file_commented = uncomment_configmap_lines(configmap_data)
+        uncommented_lines = ensure_data_section(uncommented_lines, microservice_name, full_file_commented)
         uncommented_lines = add_configmap_entries(uncommented_lines, configmap_options)
 
         with open(configmap_file_path, 'w') as configmap_file:
