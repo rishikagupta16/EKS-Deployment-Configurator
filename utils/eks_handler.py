@@ -2,12 +2,14 @@ import yaml
 import logging
 import re
 import os
+import tempfile
+import shutil
 
 from utils.configmaps_utils import (
     add_configmap_to_eks_deployment,
     read_configmap_file,
     uncomment_configmap_lines,
-    ensure_data_section,
+    ensure_config_data_section,
     add_configmap_entries,
 )
 
@@ -15,7 +17,7 @@ from utils.secretmap_utils import (
     add_secretmap_to_eks_deployment,
     read_secretmap_file,
     uncomment_secretmap_lines,
-    ensure_data_section,
+    ensure_secret_data_section,
     add_secretmap_entries,
 )
 
@@ -39,7 +41,7 @@ def handle_eks_yaml(file_path, options, ingress_path=None, configmap_options=Non
         if 'Config-map' in options and configmap_options:
             add_configuration(file_path, microservice_name, configmap_options=configmap_options)
 
-        if 'Secret-map' in options and secretmap_options:
+        if 'Secret' in options and secretmap_options:
             add_configuration(file_path, microservice_name, secretmap_options=secretmap_options)
 
     except Exception as e:
@@ -84,18 +86,26 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
             configuration_yaml = configuration_yaml.replace('{{microservice_path}}', ingress_path)
 
         try:
-            with open(file_path, 'r+') as file:
-                content = file.read().rstrip()
-                file.seek(0)
-                file.truncate()
-                file.write('\n')
-                file.write(content + '\n\n' + configuration_yaml)
+            # Create a temporary file
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                with open(file_path, 'r') as original_file:
+                    shutil.copyfileobj(original_file, temp_file)
+                
+                # Add two newline characters and the new configuration
+                temp_file.write('\n\n' + configuration_yaml)
+
+            # Replace the original file with the temporary file
+            shutil.move(temp_file.name, file_path)
+
             logger.info(f"Added configuration from {template_path} to {file_path}")
             logging.info("Configurations added successfully!")
             print("Configurations added successfully!")
         except IOError as e:
             logger.error(f"Error writing to file '{file_path}': {e}")
             logging.error("Error in adding configurations!")
+        finally:
+            if os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
 
     if configmap_options:
         """Add ConfigMap entries to eks-deployment."""
@@ -110,7 +120,7 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
 
         configmap_data = read_configmap_file(configmap_file_path)
         uncommented_lines, full_file_commented = uncomment_configmap_lines(configmap_data)
-        uncommented_lines = ensure_data_section(uncommented_lines, microservice_name, full_file_commented)
+        uncommented_lines = ensure_config_data_section(uncommented_lines, microservice_name, full_file_commented)
         uncommented_lines = add_configmap_entries(uncommented_lines, configmap_options)
 
         with open(configmap_file_path, 'w') as configmap_file:
@@ -130,14 +140,14 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
 
         secretmap_data = read_secretmap_file(secretmap_file_path)
         uncommented_lines, full_file_commented = uncomment_secretmap_lines(secretmap_data)
-        uncommented_lines = ensure_data_section(uncommented_lines, microservice_name, full_file_commented)
+        uncommented_lines = ensure_secret_data_section(uncommented_lines, microservice_name, full_file_commented)
         uncommented_lines = add_secretmap_entries(uncommented_lines, secretmap_options)
 
         with open(secretmap_file_path, 'w') as secretmap_file:
             secretmap_file.writelines(uncommented_lines)
 
-        logger.info(f"Secret-map entries added successfully to {secretmap_file_path}")
-        print("Secret-map entries added successfully to the deployment.")
+        logger.info(f"Secret entries added successfully to {secretmap_file_path}")
+        print("Secret entries added successfully to the deployment.")
 
 
 def load_template(file_path):
@@ -160,7 +170,7 @@ def update_azure_pipeline_ingress(file_path, add_ingress=False):
         stages = {
             'dev': ('non-prod', 'dev.apps.api.it.philips.com'),
             'test': ('non-prod', 'dev.apps.api.it.philips.com'),
-            'acc': ('non-prod', 'acc.apps.api.it.philips.com'),
+            'acc': ('acc', 'acc.apps.api.it.philips.com'),
             'prod': ('prod', 'apps.api.it.philips.com')
         }
 
@@ -175,7 +185,14 @@ def update_azure_pipeline_ingress(file_path, add_ingress=False):
                         namespace = f'itaap-non-prod-hyperautomation-{stage}'
                     
                     if namespace in line:
-                        new_line = line.rstrip() + f' | sed "s/{{{{env}}}}/{env}/g" | sed "s/{{{{envIdentifier}}}}/$(ENV_IDENTIFIER)/g" | sed "s/{{{{host}}}}/{host}/g"`\n'
+                        # Find the position of the last backtick
+                        last_backtick_pos = line.rfind('`')
+                        # Insert the new sed commands just before the last backtick
+                        new_line = (
+                            line[:last_backtick_pos] +
+                            f' | sed "s/{{{{env}}}}/{env}/g" | sed "s/{{{{envIdentifier}}}}/$(ENV_IDENTIFIER)/g" | sed "s/{{{{host}}}}/{host}/g"' +
+                            line[last_backtick_pos:]
+                        )
                         content[i] = new_line
                         break
 

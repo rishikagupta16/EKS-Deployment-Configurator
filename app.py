@@ -5,10 +5,10 @@ from utils.eks_handler import handle_eks_yaml
 
 # Set up logging
 logging.basicConfig(
-    level=logging.DEBUG,  # Adjust as needed: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout),
+        # logging.StreamHandler(sys.stdout),
         logging.FileHandler('eks_configurator.log', mode='a')  # Log to a file
     ]
 )
@@ -20,7 +20,7 @@ def get_user_selection():
         '1': 'Service Account',
         '2': 'Ingress',
         '3': 'Config-map',
-        '4': 'Secret-map',
+        '4': 'Secret',
     }
 
     for key, value in options.items():
@@ -81,12 +81,11 @@ def get_configmap_options():
     return configmap_inputs
 
 def get_secretmap_options():
-    print("Please select the Secret-map options you want to include:")
+    print("Please select the Secret options you want to include:")
 
     secretmap_options = {
         '1': ('DB_PASSWORD', "{{dbPassword}}"),
-        '2': ('API_KEY', "{{apiKey}}"),
-        '3': ('OTHER', "Custom secret")
+        '2': ('Other Custom Secret', "Custom secret")
     }
 
     for key, (option_name, _) in secretmap_options.items():
@@ -100,7 +99,7 @@ def get_secretmap_options():
     for key in selected_keys:
         if key in secretmap_options:
             option_name, default_value = secretmap_options[key]
-            if option_name == 'OTHER':
+            if option_name == 'Other Custom Secret':
                 custom_key = input("Enter the custom secret key(e.g. CUSTOM_SECRET): ").strip()
                 secretmap_inputs[custom_key] = "{{" + custom_key + "}}"
             else:
@@ -126,7 +125,7 @@ def main():
             'Service Account': 'Service Account',
             'Ingress': 'Ingress',
             'Config-map': 'Config-map',
-            'Secret-map': 'Secret-map'
+            'Secret': 'Secret'
         }
 
         while True:
@@ -151,7 +150,7 @@ def main():
                     ingress_path = get_ingress_path()
                 elif config == 'Config-map': 
                     configmap_options = get_configmap_options()
-                elif config == 'Secret-map':
+                elif config == 'Secret':
                     secretmap_options = get_secretmap_options()
                 options.append(option_map[config])
 

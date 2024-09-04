@@ -43,7 +43,7 @@ def add_secretmap_to_eks_deployment(file_path, microservice_name, secretmap_opti
                     secretmap_name = get_secretmap_name('eks-config-secrets.yaml')
                 except ValueError as e:
                     logger.warning(str(e))
-                    secretmap_name = f"{microservice_name}"
+                    secretmap_name = microservice_name
 
                 for secret_key, _ in secretmap_options.items():
                     new_env = {
@@ -71,10 +71,10 @@ def add_secretmap_to_eks_deployment(file_path, microservice_name, secretmap_opti
             file.write(content)
             file.truncate()
 
-        logger.info(f"Secret-map entries added to the container specification in {file_path}")
+        logger.info(f"Secret entries added to the container specification in {file_path}")
 
     except Exception as e:
-        logger.error(f"Failed to add Secret-map to EKS deployment: {e}")
+        logger.error(f"Failed to add Secret to EKS deployment: {e}")
         raise
 
 def read_secretmap_file(file_path):
@@ -105,7 +105,7 @@ def uncomment_secretmap_lines(secretmap_data):
 
     return uncommented_lines, full_file_commented
 
-def ensure_data_section(uncommented_lines, microservice_name, full_file_commented):
+def ensure_secret_data_section(uncommented_lines, microservice_name, full_file_commented):
     if full_file_commented:
         uncommented_lines.clear()
         uncommented_lines.extend([
@@ -121,24 +121,43 @@ def ensure_data_section(uncommented_lines, microservice_name, full_file_commente
     return uncommented_lines
 
 def add_secretmap_entries(uncommented_lines, secretmap_options):
-    for secret_key, default_value in secretmap_options.items():
-        uppercase_key = secret_key.upper().replace(' ', '_')
-        uncommented_lines.append(f'  {uppercase_key}: "{default_value}"\n')
-    return uncommented_lines
+    new_lines = []
+    existing_keys = set()
+
+    # First pass: collect existing keys and copy lines
+    for line in uncommented_lines:
+        new_lines.append(line)
+        if ':' in line:
+            key = line.split(':')[0].strip()
+            existing_keys.add(key)
+
+    # Second pass: add new entries
+    for secret_key, _ in secretmap_options.items():
+        uppercase_key = secret_key.upper()
+        if uppercase_key not in existing_keys:
+            camel_case_key = to_camel_case(secret_key)
+            new_lines.append(f'  {uppercase_key}: "{{{{{camel_case_key}}}}}"\n')
+
+    return new_lines
 
 def get_secretmap_name(file_path):
-    with open(file_path, 'r') as file:
-        content = file.read()
-        uncommented = '\n'.join(line for line in content.split('\n') if not line.strip().startswith('#'))
-        if uncommented.strip():
-            data = yaml.load(uncommented)
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
+            uncommented = '\n'.join(line for line in content.split('\n') if not line.strip().startswith('#'))
+            if uncommented.strip():
+                data = yaml.load(uncommented)
+            else:
+                data = yaml.load(content)
+        
+        if data and isinstance(data, dict):
+            return data.get('metadata', {}).get('name')
         else:
-            data = yaml.load(content)
-    
-    if data and isinstance(data, dict):
-        return data.get('metadata', {}).get('name')
-    else:
-        raise ValueError(f"No valid Secret-map name found in {file_path}")
+            logger.warning(f"No valid Secret name found in {file_path}")
+            return None
+    except Exception as e:
+        logger.error(f"Unexpected error reading {file_path}: {e}")
+        return None
 
 def update_eks_secret_maps(file_path, microservice_name, secretmap_options):
     secretmap_file_path = os.path.join(os.path.dirname(file_path), 'eks-config-secrets.yaml')
@@ -149,11 +168,17 @@ def update_eks_secret_maps(file_path, microservice_name, secretmap_options):
 
     secretmap_data = read_secretmap_file(secretmap_file_path)
     uncommented_lines, full_file_commented = uncomment_secretmap_lines(secretmap_data)
-    uncommented_lines = ensure_data_section(uncommented_lines, microservice_name, full_file_commented)
+    uncommented_lines = ensure_secret_data_section(uncommented_lines, microservice_name, full_file_commented)
     uncommented_lines = add_secretmap_entries(uncommented_lines, secretmap_options)
 
     with open(secretmap_file_path, 'w') as secretmap_file:
         secretmap_file.writelines(uncommented_lines)
 
-    logger.info(f"Secret-map entries added successfully to {secretmap_file_path}")
-    print("Secret-map entries added successfully to the deployment.")
+    logger.info(f"Secret entries added successfully to {secretmap_file_path}")
+    print("Secret entries added successfully to the deployment.")
+
+def to_camel_case(s):
+    # Remove non-alphanumeric characters and split
+    words = re.findall(r'[A-Za-z0-9]+', s.lower())
+    # Capitalize all words except the first one
+    return words[0] + ''.join(word.capitalize() for word in words[1:])

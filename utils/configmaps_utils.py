@@ -122,7 +122,7 @@ def uncomment_configmap_lines(configmap_data):
 
     return uncommented_lines, full_file_commented
 
-def ensure_data_section(uncommented_lines, microservice_name, full_file_commented):
+def ensure_config_data_section(uncommented_lines, microservice_name, full_file_commented):
     """Ensure that the data section is present or add a template if the entire file was commented."""
 
     if full_file_commented:
