@@ -20,14 +20,17 @@ def get_user_selection():
         '1': 'Service Account',
         '2': 'Ingress',
         '3': 'Config-map',
-        '4': 'Secret-map'
+        '4': 'Secret-map',
     }
 
     for key, value in options.items():
         print(f"{key}. {value}")
 
-    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2,3): ")
-    selected_options = selected_options.strip()
+    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2,3), or 'quit' to exit: ")
+    selected_options = selected_options.strip().lower()
+
+    if selected_options == 'quit':
+        return 'quit'
 
     if not selected_options:
         logging.error("No options selected.")
@@ -128,6 +131,10 @@ def main():
 
         while True:
             selected_configs = get_user_selection()
+
+            if selected_configs == 'quit':
+                print("Exiting the application.")
+                sys.exit(0)
 
             if not selected_configs:
                 logging.info("No valid configurations selected.")
