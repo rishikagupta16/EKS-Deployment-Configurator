@@ -3,7 +3,7 @@ import logging
 import re
 import os
 
-from configmaps_utils import (
+from utils.configmaps_utils import (
     add_configmap_to_eks_deployment,
     read_configmap_file,
     uncomment_configmap_lines,
@@ -11,7 +11,7 @@ from configmaps_utils import (
     add_configmap_entries,
 )
 
-from secretmap_utils import (
+from utils.secretmap_utils import (
     add_secretmap_to_eks_deployment,
     read_secretmap_file,
     uncomment_secretmap_lines,
