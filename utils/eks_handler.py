@@ -102,7 +102,7 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
         add_configmap_to_eks_deployment(file_path, microservice_name, configmap_options)
 
         """Add ConfigMap entries to eks-config-maps.yaml"""
-        configmap_file_path = os.path.join(os.path.dirname(__file__), 'eks-config-maps.yaml')
+        configmap_file_path = os.path.join(os.getcwd(), 'eks-config-maps.yaml')
 
         if not os.path.exists(configmap_file_path):
             logger.error("eks-config-maps.yaml file not found in the current directory.")
@@ -122,7 +122,7 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
     if secretmap_options:
         add_secretmap_to_eks_deployment(file_path, microservice_name, secretmap_options)
 
-        secretmap_file_path = os.path.join(os.path.dirname(__file__), 'eks-config-secrets.yaml')
+        secretmap_file_path = os.path.join(os.getcwd(), 'eks-config-secrets.yaml')
 
         if not os.path.exists(secretmap_file_path):
             logger.error("eks-config-secrets.yaml file not found in the current directory.")

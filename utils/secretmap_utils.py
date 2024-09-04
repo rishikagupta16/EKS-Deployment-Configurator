@@ -43,7 +43,7 @@ def add_secretmap_to_eks_deployment(file_path, microservice_name, secretmap_opti
                     secretmap_name = get_secretmap_name('eks-config-secrets.yaml')
                 except ValueError as e:
                     logger.warning(str(e))
-                    secretmap_name = f"{microservice_name}-secrets"
+                    secretmap_name = f"{microservice_name}"
 
                 for secret_key, _ in secretmap_options.items():
                     new_env = {
