@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from eks_handler import handle_eks_yaml
+from utils.eks_handler import handle_eks_yaml
 
 # Set up logging
 logging.basicConfig(
@@ -19,7 +19,8 @@ def get_user_selection():
     options = {
         '1': 'Service Account',
         '2': 'Ingress',
-        '3': 'Config-map'
+        '3': 'Config-map',
+        '4': 'Secret-map'
     }
 
     for key, value in options.items():
@@ -41,8 +42,9 @@ def get_user_selection():
     return selected_configs
 
 def get_ingress_path():
-    ingress_path = input("Enter the path to be added in the Ingress configuration: ").strip()
+    ingress_path = input("Enter the path to be added in the Ingress configuration (press Enter for root path): ").strip()
     return ingress_path
+
 def get_configmap_options():
     print("Please select the Configmap options you want to include:")
 
@@ -75,6 +77,34 @@ def get_configmap_options():
 
     return configmap_inputs
 
+def get_secretmap_options():
+    print("Please select the Secret-map options you want to include:")
+
+    secretmap_options = {
+        '1': ('DB_PASSWORD', "{{dbPassword}}"),
+        '2': ('API_KEY', "{{apiKey}}"),
+        '3': ('OTHER', "Custom secret")
+    }
+
+    for key, (option_name, _) in secretmap_options.items():
+        print(f"{key}. {option_name}")
+
+    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2,3): ").strip()
+    selected_keys = [key.strip() for key in selected_options.split(',')]
+    
+    secretmap_inputs = {}
+
+    for key in selected_keys:
+        if key in secretmap_options:
+            option_name, default_value = secretmap_options[key]
+            if option_name == 'OTHER':
+                custom_key = input("Enter the custom secret key(e.g. CUSTOM_SECRET): ").strip()
+                secretmap_inputs[custom_key] = "{{" + custom_key + "}}"
+            else:
+                secretmap_inputs[option_name] = default_value
+
+    return secretmap_inputs
+
 def main():
     try:
         current_dir = os.getcwd()
@@ -92,7 +122,8 @@ def main():
         option_map = {
             'Service Account': 'Service Account',
             'Ingress': 'Ingress',
-            'Config-map': 'Config-map'
+            'Config-map': 'Config-map',
+            'Secret-map': 'Secret-map'
         }
 
         while True:
@@ -106,16 +137,19 @@ def main():
             options = []
             ingress_path = None
             configmap_options = None
+            secretmap_options = None
             
             for config in selected_configs:
                 if config == 'Ingress':
                     ingress_path = get_ingress_path()
                 elif config == 'Config-map': 
                     configmap_options = get_configmap_options()
+                elif config == 'Secret-map':
+                    secretmap_options = get_secretmap_options()
                 options.append(option_map[config])
 
             # Handle the YAML modifications based on the user's selection
-            handle_eks_yaml(yaml_file_path, options, ingress_path, configmap_options )
+            handle_eks_yaml(yaml_file_path, options, ingress_path, configmap_options, secretmap_options)
 
             logging.info("Configurations added successfully!")
             print("Configurations added successfully!")
