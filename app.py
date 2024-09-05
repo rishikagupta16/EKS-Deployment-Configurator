@@ -52,6 +52,7 @@ def get_configmap_options():
     print("Please select the Configmap options you want to include:")
 
     configmap_options = {
+        '0': ('Other Custom config-map', "Custom"),
         '1': ('API_PATH', "{{apiPath}}"),
         '2': ('DB_URL', "{{dbUrl}}"),
         '3': ('DB_NAME', "{{dbName}}"),
@@ -76,7 +77,11 @@ def get_configmap_options():
     for key in selected_keys:
         if key in configmap_options:
             option_name, default_value = configmap_options[key]
-            configmap_inputs[option_name] = default_value
+            if option_name == 'Other Custom config-map':
+                custom_key = input("Enter the custom config-map key(e.g. CUSTOM_ID): ").strip().upper()
+                configmap_inputs[custom_key] = "{{" + custom_key + "}}"
+            else:
+                configmap_inputs[option_name.upper()] = default_value
 
     return configmap_inputs
 
@@ -84,8 +89,8 @@ def get_secretmap_options():
     print("Please select the Secret options you want to include:")
 
     secretmap_options = {
-        '1': ('DB_PASSWORD', "{{dbPassword}}"),
-        '2': ('Other Custom Secret', "Custom secret")
+        '0': ('Other Custom Secret', "Custom secret"),
+        '1': ('DB_PASSWORD', "{{dbPassword}}")
     }
 
     for key, (option_name, _) in secretmap_options.items():

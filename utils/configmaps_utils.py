@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 from ruamel.yaml import YAML
 
 # Configure the YAML processor
@@ -57,13 +58,13 @@ def add_configmap_to_eks_deployment(file_path, microservice_name, configmap_opti
                     configmap_name = microservice_name  # Fallback to using microservice_name
 
                 # Append new ConfigMap entries to the env section at the insertion point
-                for config_key, _ in configmap_options.items():
+                for config_key, config_value in configmap_options.items():
                     new_env = {
-                        'name': config_key,
+                        'name': config_key.upper(),
                         'valueFrom': {
                             'configMapKeyRef': {
                                 'name': configmap_name,
-                                'key': config_key
+                                'key': config_key.upper()
                             }
                         }
                     }
@@ -141,12 +142,42 @@ def ensure_config_data_section(uncommented_lines, microservice_name, full_file_c
     return uncommented_lines
 
 def add_configmap_entries(uncommented_lines, configmap_options):
-    """Add ConfigMap entries to the data section."""
-    for config_key, default_value in configmap_options.items():
-        uppercase_key = config_key.upper().replace(' ', '_')
-        uncommented_lines.append(f'  {uppercase_key}: "{default_value}"\n')
+    new_lines = []
+    existing_keys = set()
+    data_section_found = False
 
-    return uncommented_lines
+    # First pass: collect existing keys and copy lines
+    for line in uncommented_lines:
+        new_lines.append(line)
+        if line.strip() == 'data:':
+            data_section_found = True
+        elif data_section_found and ':' in line:
+            key = line.split(':')[0].strip()
+            existing_keys.add(key)
+
+    # If data section not found, add it
+    if not data_section_found:
+        new_lines.append('data:\n')
+
+    # Second pass: add new entries
+    for config_key, config_value in configmap_options.items():
+        uppercase_key = config_key.upper()
+        if uppercase_key not in existing_keys:
+            if config_value.startswith('{{') and config_value.endswith('}}'):
+                # This is a custom entry, use camel case for the value
+                camel_case_key = to_camel_case(config_key)
+                new_lines.append(f'  {uppercase_key}: "{{{{{camel_case_key}}}}}"\n')
+            else:
+                # This is a predefined entry, use the original value
+                new_lines.append(f'  {uppercase_key}: "{config_value}"\n')
+
+    return new_lines
+
+def to_camel_case(s):
+    # Remove non-alphanumeric characters and split
+    words = re.findall(r'[A-Za-z0-9]+', s.lower())
+    # Capitalize all words except the first one
+    return words[0] + ''.join(word.capitalize() for word in words[1:])
 
 def get_configmap_name(file_path):
     with open(file_path, 'r') as file:
