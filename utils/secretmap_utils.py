@@ -182,3 +182,26 @@ def to_camel_case(s):
     words = re.findall(r'[A-Za-z0-9]+', s.lower())
     # Capitalize all words except the first one
     return words[0] + ''.join(word.capitalize() for word in words[1:])
+
+def update_azure_pipeline_secret(file_path, secretmap_options):
+    if not secretmap_options:
+        return
+
+    try:
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        for i, line in enumerate(content):
+            if line.strip().startswith('secretMapTemplate=`cat eks-config-secrets.yaml'):
+                new_line = line.rstrip()[:-1]  # Remove the last backtick
+                for key in secretmap_options:
+                    new_line += f' | sed "s/{{{{' + to_camel_case(key) + '}}/$(' + key.upper() + ')/g"'
+                new_line += '`\n'
+                content[i] = new_line
+
+        with open(file_path, 'w') as file:
+            file.writelines(content)
+        print(f"Updated Azure pipeline CD file with secrets: {file_path}")
+        logger.info(f"Updated Azure pipeline CD file with secrets: {file_path}")
+    except Exception as e:
+        logger.error(f"Error updating Azure pipeline CD file with secrets: {e}")

@@ -196,3 +196,26 @@ def get_configmap_name(file_path):
     else:
         # If no valid data is found, return a default name or raise an exception
         raise ValueError(f"No valid ConfigMap name found in {file_path}")
+
+def update_azure_pipeline_configmap(file_path, configmap_options):
+    if not configmap_options:
+        return
+
+    try:
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        for i, line in enumerate(content):
+            if line.strip().startswith('configMapTemplate=`cat eks-config-maps.yaml'):
+                new_line = line.rstrip()[:-1]  # Remove the last backtick
+                for key in configmap_options:
+                    new_line += f' | sed "s/{{{{' + to_camel_case(key) + '}}/$(' + key.upper() + ')/g"'
+                new_line += '`\n'
+                content[i] = new_line
+
+        with open(file_path, 'w') as file:
+            file.writelines(content)
+        print(f"Updated Azure pipeline CD file with config map: {file_path}")
+        logger.info(f"Updated Azure pipeline CD file with config map: {file_path}")
+    except Exception as e:
+        logger.error(f"Error updating Azure pipeline CD file with config map: {e}")

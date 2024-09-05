@@ -11,6 +11,7 @@ from utils.configmaps_utils import (
     uncomment_configmap_lines,
     ensure_config_data_section,
     add_configmap_entries,
+    update_azure_pipeline_configmap
 )
 
 from utils.secretmap_utils import (
@@ -19,6 +20,7 @@ from utils.secretmap_utils import (
     uncomment_secretmap_lines,
     ensure_secret_data_section,
     add_secretmap_entries,
+    update_azure_pipeline_secret
 )
 
 # Set up logging
@@ -40,9 +42,11 @@ def handle_eks_yaml(file_path, options, ingress_path=None, configmap_options=Non
 
         if 'Config-map' in options and configmap_options:
             add_configuration(file_path, microservice_name, configmap_options=configmap_options)
+            update_azure_pipeline_configmap('azure-pipeline-CD.yaml', configmap_options)
 
         if 'Secret' in options and secretmap_options:
             add_configuration(file_path, microservice_name, secretmap_options=secretmap_options)
+            update_azure_pipeline_secret('azure-pipeline-CD.yaml', secretmap_options)
 
     except Exception as e:
         logger.exception("Error handling EKS YAML:")
