@@ -35,6 +35,7 @@ def handle_eks_yaml(file_path, options, ingress_path=None, configmap_options=Non
 
         if 'Service Account' in options:
             add_configuration(file_path, microservice_name, template_path='templates/service-account.yaml')
+            update_azure_pipeline_serviceaccount('azure-pipeline-CD.yaml', add_service_account=True)
 
         if 'Ingress' in options:
             add_configuration(file_path, microservice_name, template_path='templates/ingress.yaml', ingress_path=ingress_path)
@@ -162,6 +163,31 @@ def load_template(file_path):
     except FileNotFoundError:
         logger.error(f"File '{file_path}' not found.")
         return None
+
+def update_azure_pipeline_serviceaccount(file_path, add_service_account=False):
+    if not add_service_account:
+        return
+    try:
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        for i, line in enumerate(content):
+            if line.strip().startswith('template=`cat eks-deployment.yaml'):
+                last_backtick_pos = line.rfind('`')
+                new_line = (
+                            line[:last_backtick_pos] +
+                            ' | sed "s#{{AwsAccountRoleArn}}#$(AWS_ACCOUNT_ROLE_ARN)#g"' +
+                            line[last_backtick_pos:]
+                        )
+                content[i] = new_line
+
+        with open(file_path, 'w') as file:
+            file.writelines(content)
+        print(f"Updated Azure pipeline CD file with AwsAccountRoleArn for ServiceAccount")
+        logger.info(f"Updated Azure pipeline CD file with AwsAccountRoleArn for ServiceAccount")
+    except Exception as e:
+        logger.error(f"Error updating Azure pipeline CD file with AwsAccountRoleArn for ServiceAccount: {e}")
+
 
 def update_azure_pipeline_ingress(file_path, add_ingress=False):
     if not add_ingress:
