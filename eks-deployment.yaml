@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: itaap-hyperautomation-quote-creation-baseline-generation-deployment
+  name: itaap-hyperautomation-nar-pricing-upload-deployment
   namespace: {{deployNamespace}}
   labels:
-    app: itaap-hyperautomation-quote-creation-baseline-generation
+    app: itaap-hyperautomation-nar-pricing-upload
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: itaap-hyperautomation-quote-creation-baseline-generation
+      app: itaap-hyperautomation-nar-pricing-upload
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: itaap-hyperautomation-quote-creation-baseline-generation
+        app: itaap-hyperautomation-nar-pricing-upload
     spec:
       containers:
-        - name: itaap-hyperautomation-quote-creation-baseline-generation-container
+        - name: itaap-hyperautomation-nar-pricing-upload-container
           image: >-
-            762168133611.dkr.ecr.eu-west-1.amazonaws.com/itaap/hyperautomation/itaap-hyperautomation-quote-creation-baseline-generation:{{imageTagName}}
+            762168133611.dkr.ecr.eu-west-1.amazonaws.com/itaap/hyperautomation/itaap-hyperautomation-nar-pricing-upload:{{imageTagName}}
 
           ports:
             - containerPort: 8085
@@ -90,10 +90,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: itaap-hyperautomation-quote-creation-baseline-generation-service
+  name: itaap-hyperautomation-nar-pricing-upload-service
   namespace: {{deployNamespace}}
   labels:
-    app: itaap-hyperautomation-quote-creation-baseline-generation
+    app: itaap-hyperautomation-nar-pricing-upload
 spec:
   type: ClusterIP
   ports:
@@ -101,5 +101,5 @@ spec:
       port: 80
       targetPort: 8085
   selector:
-    app: itaap-hyperautomation-quote-creation-baseline-generation
+    app: itaap-hyperautomation-nar-pricing-upload
 
