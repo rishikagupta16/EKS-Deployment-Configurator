@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: itaap-hyperautomation-nar-pricing-upload-deployment
+  name: itaap-hyperautomation-quote-creation-baseline-generation-deployment
   namespace: {{deployNamespace}}
   labels:
-    app: itaap-hyperautomation-nar-pricing-upload
+    app: itaap-hyperautomation-quote-creation-baseline-generation
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: itaap-hyperautomation-nar-pricing-upload
+      app: itaap-hyperautomation-quote-creation-baseline-generation
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: itaap-hyperautomation-nar-pricing-upload
+        app: itaap-hyperautomation-quote-creation-baseline-generation
     spec:
       containers:
-        - name: itaap-hyperautomation-nar-pricing-upload-container
+        - name: itaap-hyperautomation-quote-creation-baseline-generation-container
           image: >-
-            762168133611.dkr.ecr.eu-west-1.amazonaws.com/itaap/hyperautomation/itaap-hyperautomation-nar-pricing-upload:{{imageTagName}}
+            762168133611.dkr.ecr.eu-west-1.amazonaws.com/itaap/hyperautomation/itaap-hyperautomation-quote-creation-baseline-generation:{{imageTagName}}
 
           ports:
             - containerPort: 8085
-              protocol: TCP     
+              protocol: TCP
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: cloud
@@ -65,15 +65,15 @@ spec:
           terminationMessagePolicy: File
           imagePullPolicy: Always
           resources:
-           requests:
-             memory: "256Mi"
-             cpu: "25m" 
-           limits:
-             memory: "512Mi"
-             cpu: "100m"  
+            requests:
+              memory: "256Mi"
+              cpu: "25m"
+            limits:
+              memory: "512Mi"
+              cpu: "100m"
       nodeSelector:
         kubernetes.io/os: linux
-        kubernetes.io/arch: amd64                        
+        kubernetes.io/arch: amd64
       restartPolicy: Always
       schedulerName: default-scheduler
   strategy:
@@ -90,10 +90,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: itaap-hyperautomation-nar-pricing-upload-service
+  name: itaap-hyperautomation-quote-creation-baseline-generation-service
   namespace: {{deployNamespace}}
   labels:
-    app: itaap-hyperautomation-nar-pricing-upload
+    app: itaap-hyperautomation-quote-creation-baseline-generation
 spec:
   type: ClusterIP
   ports:
@@ -101,5 +101,5 @@ spec:
       port: 80
       targetPort: 8085
   selector:
-    app: itaap-hyperautomation-nar-pricing-upload
+    app: itaap-hyperautomation-quote-creation-baseline-generation
 
