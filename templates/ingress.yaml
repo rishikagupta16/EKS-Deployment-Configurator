@@ -29,7 +29,7 @@ spec:
     - host: {{host}}
       http:
         paths:
-          - path: {{envIdentifier}}/{{microservice_path}}
+          - path: {{envIdentifier}}{{microservice_path}}
             pathType: Prefix
             backend:
               service:

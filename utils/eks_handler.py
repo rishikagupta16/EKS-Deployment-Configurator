@@ -176,17 +176,17 @@ def update_azure_pipeline_serviceaccount(file_path, add_service_account=False):
                 last_backtick_pos = line.rfind('`')
                 new_line = (
                             line[:last_backtick_pos] +
-                            ' | sed "s#{{AwsAccountRoleArn}}#$(AWS_ACCOUNT_ROLE_ARN)#g"' +
+                            ' | sed "s#{{awsAccountRoleArn}}#$(AWS_ACCOUNT_ROLE_ARN)#g"' +
                             line[last_backtick_pos:]
                         )
                 content[i] = new_line
 
         with open(file_path, 'w') as file:
             file.writelines(content)
-        print(f"Updated Azure pipeline CD file with AwsAccountRoleArn for ServiceAccount")
-        logger.info(f"Updated Azure pipeline CD file with AwsAccountRoleArn for ServiceAccount")
+        print(f"Updated Azure pipeline CD file with awsAccountRoleArn for ServiceAccount")
+        logger.info(f"Updated Azure pipeline CD file with awsAccountRoleArn for ServiceAccount")
     except Exception as e:
-        logger.error(f"Error updating Azure pipeline CD file with AwsAccountRoleArn for ServiceAccount: {e}")
+        logger.error(f"Error updating Azure pipeline CD file with awsAccountRoleArn for ServiceAccount: {e}")
 
 
 def update_azure_pipeline_ingress(file_path, add_ingress=False):

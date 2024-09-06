@@ -26,7 +26,7 @@ def get_user_selection():
     for key, value in options.items():
         print(f"{key}. {value}")
 
-    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2,3), or 'quit' to exit: ")
+    selected_options = input("\nEnter the numbers of the options you want to add, separated by commas (e.g., 1,2,3), or 'quit' to exit: ")
     selected_options = selected_options.strip().lower()
 
     if selected_options == 'quit':
@@ -45,7 +45,8 @@ def get_user_selection():
     return selected_configs
 
 def get_ingress_path():
-    ingress_path = input("Enter the path to be added in the Ingress configuration (press Enter for root path): ").strip()
+    print("\nEnter the path to be added in the Ingress configuration (press Enter for root path)")
+    ingress_path = input("e.g. '/your-microservice/api' : ").strip()
     return ingress_path
 
 def get_configmap_options():
@@ -69,7 +70,7 @@ def get_configmap_options():
     for key, (option_name, _) in configmap_options.items():
         print(f"{key}. {option_name}")
 
-    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,3,5): ").strip()
+    selected_options = input("\nEnter the numbers of the options you want to add, separated by commas (e.g., 1,3,5): ").strip()
     selected_keys = [key.strip() for key in selected_options.split(',')]
     
     configmap_inputs = {}
@@ -78,7 +79,7 @@ def get_configmap_options():
         if key in configmap_options:
             option_name, default_value = configmap_options[key]
             if option_name == 'Other Custom config-map':
-                custom_key = input("Enter the custom config-map key(e.g. CUSTOM_ID): ").strip().upper()
+                custom_key = input("\nEnter the custom config-map key(e.g. CUSTOM_ID): ").strip().upper()
                 configmap_inputs[custom_key] = "{{" + custom_key + "}}"
             else:
                 configmap_inputs[option_name.upper()] = default_value
@@ -96,7 +97,7 @@ def get_secretmap_options():
     for key, (option_name, _) in secretmap_options.items():
         print(f"{key}. {option_name}")
 
-    selected_options = input("Enter the numbers of the options you want to add, separated by commas (e.g., 1,2,3): ").strip()
+    selected_options = input("\nEnter the numbers of the options you want to add, separated by commas (e.g., 1,2,3): ").strip()
     selected_keys = [key.strip() for key in selected_options.split(',')]
     
     secretmap_inputs = {}
@@ -105,7 +106,7 @@ def get_secretmap_options():
         if key in secretmap_options:
             option_name, default_value = secretmap_options[key]
             if option_name == 'Other Custom Secret':
-                custom_key = input("Enter the custom secret key(e.g. CUSTOM_SECRET): ").strip()
+                custom_key = input("\nEnter the custom secret key(e.g. CUSTOM_SECRET): ").strip()
                 secretmap_inputs[custom_key] = "{{" + custom_key + "}}"
             else:
                 secretmap_inputs[option_name] = default_value
