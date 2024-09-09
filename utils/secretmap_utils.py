@@ -125,20 +125,36 @@ def ensure_secret_data_section(uncommented_lines, microservice_name, full_file_c
 def add_secretmap_entries(uncommented_lines, secretmap_options):
     new_lines = []
     existing_keys = set()
+    data_section_found = False
+    last_line_was_data = False
 
-    # First pass: collect existing keys and copy lines
+    # collect existing keys and copy lines
     for line in uncommented_lines:
-        new_lines.append(line)
-        if ':' in line:
-            key = line.split(':')[0].strip()
+        stripped_line = line.strip()
+        if stripped_line == 'data:':
+            data_section_found = True
+            new_lines.append(line)
+            last_line_was_data = True
+        elif data_section_found and ':' in stripped_line:
+            if not last_line_was_data:
+                new_lines.append('\n')  # Add newline if the previous line wasn't 'data:'
+            key = stripped_line.split(':')[0].strip()
             existing_keys.add(key)
+            new_lines.append(line)
+            last_line_was_data = False
+        else:
+            new_lines.append(line)
+            last_line_was_data = False
 
-    # Second pass: add new entries
-    for secret_key, _ in secretmap_options.items():
-        uppercase_key = secret_key.upper()
-        if uppercase_key not in existing_keys:
-            camel_case_key = to_camel_case(secret_key)
-            new_lines.append(f'  {uppercase_key}: "{{{{{camel_case_key}}}}}"\n')
+    if data_section_found:
+        for secret_key, _ in secretmap_options.items():
+            uppercase_key = secret_key.upper()
+            if uppercase_key not in existing_keys:
+                if not last_line_was_data:
+                    new_lines.append('\n')  # Add newline before new entry if needed
+                camel_case_key = to_camel_case(secret_key)
+                new_lines.append(f'  {uppercase_key}: "{{{{{camel_case_key}}}}}"\n')
+                last_line_was_data = False
 
     return new_lines
 
@@ -172,6 +188,14 @@ def update_eks_secret_maps(file_path, microservice_name, secretmap_options):
     uncommented_lines, full_file_commented = uncomment_secretmap_lines(secretmap_data)
     uncommented_lines = ensure_secret_data_section(uncommented_lines, microservice_name, full_file_commented)
     uncommented_lines = add_secretmap_entries(uncommented_lines, secretmap_options)
+
+    # Ensure there's no extra newline at the end of the file
+    while uncommented_lines and uncommented_lines[-1].strip() == '':
+        uncommented_lines.pop()
+
+    # Add a final newline to the file
+    if uncommented_lines and not uncommented_lines[-1].endswith('\n'):
+        uncommented_lines[-1] += '\n'
 
     with open(secretmap_file_path, 'w') as secretmap_file:
         secretmap_file.writelines(uncommented_lines)

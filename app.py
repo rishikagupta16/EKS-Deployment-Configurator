@@ -2,6 +2,8 @@ import logging
 import os
 import sys
 from utils.eks_handler import handle_eks_yaml
+import random
+import time
 
 # Set up logging
 logging.basicConfig(
@@ -113,7 +115,51 @@ def get_secretmap_options():
 
     return secretmap_inputs
 
+def print_ascii_logo():
+    logo = """
+    ╔═╗╦╔═╔═╗  ╔═╗╔═╗╔╗╔╔═╗╦╔═╗╦ ╦╦═╗╔═╗╔╦╗╔═╗╦═╗
+    ║╣ ╠╩╗╚═╗  ║  ║ ║║║║╠╣ ║║ ╦║ ║╠╦╝╠═╣ ║ ║ ║╠╦╝
+    ╚═╝╩ ╩╚═╝  ╚═╝╚═╝╝╚╝╚  ╩╚═╝╚═╝╩╚═╩ ╩ ╩ ╚═╝╩╚═
+    """
+    print(logo)
+
+def get_welcome_message():
+    messages = [
+        "Welcome to the future of automation!",
+        "Empowering your workflow, one script at a time.",
+        "Turning complex tasks into simple clicks.",
+        "Your personal automation sidekick is here!",
+        "Efficiency meets creativity - let's automate!",
+        "Transforming ideas into automated reality.",
+        "HyperAutomation: Where impossible becomes automated.",
+        "Unleash the power of automation with us!",
+        "Simplifying your day, the HyperAutomation way."
+    ]
+    return random.choice(messages)
+
+def get_thank_you_message():
+    messages = [
+        "Thank you for using HyperAutomation! Have a great day!",
+        "You're awesome! Thanks for automating with us!",
+        "Automation complete! We hope you enjoyed the experience!",
+        "Thank you for choosing HyperAutomation. Until next time!",
+        "You've just made your microservice more efficient. Great job!"
+    ]
+    return random.choice(messages)
+
+def animate_text(text):
+    for char in text:
+        print(char, end='', flush=True)
+        time.sleep(0.05)
+    print()
+
 def main():
+    print_ascii_logo()
+    animate_text("Welcome to EKS Configurator!")
+    print("\nMade with love <3 by HyperAutomation - ITaaP team\n")
+    print(get_welcome_message())
+    print("------------------------------------")
+    
     try:
         current_dir = os.getcwd()
         logging.info(f"Current Directory: {current_dir}")
@@ -138,7 +184,8 @@ def main():
             selected_configs = get_user_selection()
 
             if selected_configs == 'quit':
-                print("Exiting the application.")
+                print(get_thank_you_message())
+                time.sleep(5)
                 sys.exit(0)
 
             if not selected_configs:
@@ -168,15 +215,19 @@ def main():
 
             continue_choice = input("Do you want to add another configuration? (yes/no): ").strip().lower()
             if continue_choice != 'yes':
+                print(get_thank_you_message())
+                time.sleep(5)
                 break
-
+                
     except KeyError as e:
         logging.exception(f"A KeyError occurred: {e}")
         print(f"A KeyError occurred: {e}. Please check your input.")
+        time.sleep(5)
         sys.exit(1)
     except Exception as e:
         logging.exception("An unexpected error occurred:")
         print("An unexpected error occurred. Check the log file for details.")
+        time.sleep(5)
         sys.exit(1)
 
 if __name__ == "__main__":

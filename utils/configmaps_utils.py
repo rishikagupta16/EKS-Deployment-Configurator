@@ -145,24 +145,37 @@ def add_configmap_entries(uncommented_lines, configmap_options):
     new_lines = []
     existing_keys = set()
     data_section_found = False
+    last_line_was_data = False
 
     # First pass: collect existing keys and copy lines
     for line in uncommented_lines:
-        new_lines.append(line)
-        if line.strip() == 'data:':
+        stripped_line = line.strip()
+        if stripped_line == 'data:':
             data_section_found = True
-        elif data_section_found and ':' in line:
-            key = line.split(':')[0].strip()
+            new_lines.append(line)
+            last_line_was_data = True
+        elif data_section_found and ':' in stripped_line:
+            if not last_line_was_data:
+                new_lines.append('\n')  # Add newline if the previous line wasn't 'data:'
+            key = stripped_line.split(':')[0].strip()
             existing_keys.add(key)
+            new_lines.append(line)
+            last_line_was_data = False
+        else:
+            new_lines.append(line)
+            last_line_was_data = False
 
     # If data section not found, add it
     if not data_section_found:
         new_lines.append('data:\n')
+        last_line_was_data = True
 
     # Second pass: add new entries
     for config_key, config_value in configmap_options.items():
         uppercase_key = config_key.upper()
         if uppercase_key not in existing_keys:
+            if not last_line_was_data:
+                new_lines.append('\n')  # Add newline before new entry if needed
             if config_value.startswith('{{') and config_value.endswith('}}'):
                 # This is a custom entry, use camel case for the value
                 camel_case_key = to_camel_case(config_key)
@@ -170,6 +183,7 @@ def add_configmap_entries(uncommented_lines, configmap_options):
             else:
                 # This is a predefined entry, use the original value
                 new_lines.append(f'  {uppercase_key}: "{config_value}"\n')
+            last_line_was_data = False
 
     return new_lines
 
