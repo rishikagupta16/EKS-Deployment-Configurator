@@ -171,7 +171,8 @@ def main():
 
         if not os.path.exists(yaml_file_path):
             logging.error(f"Error: '{yaml_file_name}' not found in the current directory.")
-            print(f"Error: '{yaml_file_name}' not found in the current directory.")
+            print(f"Error: '{yaml_file_name}' not found in the current directory, closing the application...")
+            time.sleep(10)
             sys.exit(1)
         option_map = {
             'Service Account': 'Service Account',
