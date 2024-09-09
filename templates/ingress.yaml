@@ -1,0 +1,38 @@
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{microservice_name}}-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: http://token-manage-service.itaap-{{env}}-common.svc.cluster.local/token/auth
+    nginx.ingress.kubernetes.io/auth-response-headers: "authorization"
+    nginx.ingress.kubernetes.io/auth-cache-key: '$http_authorization$request_uri'
+    nginx.ingress.kubernetes.io/auth-cache-duration: '5m'
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, DELETE, PATCH"
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+  namespace: {{deployNamespace}}
+spec:
+  defaultBackend:
+    service:
+      name: {{microservice_name}}-service
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - {{host}}
+      secretName: itaap-tls-secret
+  rules:
+    - host: {{host}}
+      http:
+        paths:
+          - path: {{envIdentifier}}{{microservice_path}}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{microservice_name}}-service
+                port:
+                  number: 80

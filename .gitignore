@@ -1,0 +1,5 @@
+eks_configurator.log
+eks-deployment.yaml
+/__pycache__
+__pycache__/eks_handler.cpython-311.pyc
+*.pyc

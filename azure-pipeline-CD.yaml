@@ -1,0 +1,177 @@
+variables:
+  - name: V_TEST_SUITE_NAME
+    value: 'postman_collection/collection/postman_collection.json'
+  - name: V_TEST_SUITE_ENV_NAME
+    value: 'postman_collection/env/DEV.postman_environment.json'
+  - name:  V_BROWSER_TITLE
+    value: 'itaap-hyperautomation-nar-pricing-upload MicroService Report'
+  - name:  V_TITLE
+    value: 'itaap-hyperautomation-nar-pricing-upload MicroService DASHBOARD'
+  - name:  Version.MajorMinor
+    value: 1.0
+  - name:  Version.Revision
+    value: $[counter(variables['Version.MajorMinor'], 0)]
+  - group: AWS_Credentials
+  - group: AWS_Credentials_Acc
+  - group: AWS_Credentials_Prod
+
+name: $(Version.MajorMinor).$(Version.Revision)
+
+# To restrict pipeline trigger from pushes to any branch
+trigger: none
+
+# To restrict pipeline trigger from pull request form or to any branch
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: itaap-hyperautomation-nar-pricing-upload-pipeline
+      source: "itaap-hyperautomation-nar-pricing-upload"
+      branch: main
+      trigger:
+        branches:
+          - main
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: dev
+    displayName: itaap-hyperautomation-nar-pricing-upload MicroService Dev deployment
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: dev
+        variables:
+          - group: AWS_Credentials
+        environment: environment-itaap-apps-dev
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: Bash@3
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+                      export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+                      aws eks --region eu-west-1 update-kubeconfig --name itaap-non-prod
+                      imageTagName=$(resources.pipeline.itaap-hyperautomation-nar-pricing-upload-pipeline.runName)
+                      echo "Image tag " $imageTagName
+                      template=`cat eks-deployment.yaml | sed "s/{{imageTagName}}/$imageTagName/g" | sed "s/{{deployNamespace}}/itaap-non-prod-hyperautomation-dev/g" | sed "s/{{appEnv}}/dev/g" | sed "s/{{appVersion}}/$imageTagName/g"`
+                      configMapTemplate=`cat eks-config-maps.yaml | sed "s/{{deployNamespace}}/itaap-non-prod-hyperautomation-dev/g"`
+                      secretMapTemplate=`cat eks-config-secrets.yaml | sed "s/{{deployNamespace}}/itaap-non-prod-hyperautomation-dev/g"`
+                      echo "$secretMapTemplate" | kubectl apply -f -
+                      echo "$configMapTemplate" | kubectl apply -f -
+                      echo "$template" | kubectl apply -f -
+
+  - stage: validation_post_deployment_on_dev
+    displayName: 'validation_post_deployment_on_dev'
+    dependsOn: dev
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: validation_post_deployment
+        variables:
+          - group: environment-itaap-dev
+          - group: AWS_Credentials
+        environment: environment-itaap-apps-dev
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: newman-report-template.yaml
+                  parameters:
+                    P_TEST_SUITE_NAME: ${{ variables.V_TEST_SUITE_NAME }}
+                    P_TEST_SUITE_ENV_NAME: ${{ variables.V_TEST_SUITE_ENV_NAME }}
+                    P_BROWSER_TITLE: ${{ variables.V_BROWSER_TITLE }}
+                    P_TITLE: ${{ variables.V_TITLE }}
+
+  - stage: test
+    displayName: itaap-hyperautomation-nar-pricing-upload MicroService Test deployment
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: validation_post_deployment_on_dev
+    jobs:
+      - deployment: test
+        variables:
+          - group: AWS_Credentials
+        environment: environment-itaap-apps-test
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: Bash@3
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+                      export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+                      aws eks --region eu-west-1 update-kubeconfig --name itaap-non-prod
+                      imageTagName=$(resources.pipeline.itaap-hyperautomation-nar-pricing-upload-pipeline.runName)
+                      echo "Image tag " $imageTagName
+                      template=`cat eks-deployment.yaml | sed "s/{{imageTagName}}/$imageTagName/g" | sed "s/{{deployNamespace}}/itaap-non-prod-hyperautomation-test/g" | sed "s/{{appEnv}}/tst/g" | sed "s/{{appVersion}}/$imageTagName/g"`
+                      configMapTemplate=`cat eks-config-maps.yaml | sed "s/{{deployNamespace}}/itaap-non-prod-hyperautomation-test/g"`
+                      secretMapTemplate=`cat eks-config-secrets.yaml | sed "s/{{deployNamespace}}/itaap-non-prod-hyperautomation-test/g"`
+                      echo "$secretMapTemplate" | kubectl apply -f -
+                      echo "$configMapTemplate" | kubectl apply -f -
+                      echo "$template" | kubectl apply -f -
+
+  - stage: acc
+    displayName: itaap-hyperautomation-nar-pricing-upload MicroService Acc deployment
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: test
+    jobs:
+      - deployment: acc
+        variables:
+          - group: AWS_Credentials_Acc
+        environment: environment-itaap-apps-acc
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: Bash@3
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+                      export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+                      aws eks --region eu-west-1 update-kubeconfig --name itaap-acc
+                      imageTagName=$(resources.pipeline.itaap-hyperautomation-nar-pricing-upload-pipeline.runName)
+                      echo "Image tag " $imageTagName
+                      template=`cat eks-deployment.yaml | sed "s/{{imageTagName}}/$imageTagName/g" | sed "s/{{deployNamespace}}/itaap-acc-hyperautomation/g" | sed "s/{{appEnv}}/acc/g" | sed "s/{{appVersion}}/$imageTagName/g"`
+                      configMapTemplate=`cat eks-config-maps.yaml | sed "s/{{deployNamespace}}/itaap-acc-hyperautomation/g"`
+                      secretMapTemplate=`cat eks-config-secrets.yaml | sed "s/{{deployNamespace}}/itaap-acc-hyperautomation/g"`
+                      echo "$secretMapTemplate" | kubectl apply -f -
+                      echo "$configMapTemplate" | kubectl apply -f -  
+                      echo "$template" | kubectl apply -f -                            
+
+  - stage: prod
+    displayName: itaap-hyperautomation-nar-pricing-upload MicroService Production deployment
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: acc
+    jobs:
+      - deployment: production
+        variables:
+          - group: AWS_Credentials_Prod
+        environment: environment-itaap-apps-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: Bash@3
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+                      export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+                      aws eks --region eu-west-1 update-kubeconfig --name itaap-prod
+                      imageTagName=$(resources.pipeline.itaap-hyperautomation-nar-pricing-upload-pipeline.runName)
+                      echo "Image tag " $imageTagName
+                      template=`cat eks-deployment.yaml | sed "s/{{imageTagName}}/$imageTagName/g" | sed "s/{{deployNamespace}}/itaap-prod-hyperautomation/g" | sed "s/{{appEnv}}/prod/g" | sed "s/{{appVersion}}/$imageTagName/g"`
+                      configMapTemplate=`cat eks-config-maps.yaml | sed "s/{{deployNamespace}}/itaap-prod-hyperautomation/g"`
+                      secretMapTemplate=`cat eks-config-secrets.yaml | sed "s/{{deployNamespace}}/itaap-prod-hyperautomation/g"`
+                      echo "$secretMapTemplate" | kubectl apply -f -
+                      echo "$configMapTemplate" | kubectl apply -f -     
+                      echo "$template" | kubectl apply -f -

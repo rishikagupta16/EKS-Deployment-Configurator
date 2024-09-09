@@ -1,0 +1,5 @@
+- name: {{configMap}}
+  valueFrom:
+    configMapKeyRef:
+      name: {{configmap_name}}
+      key: {{configmap}}
