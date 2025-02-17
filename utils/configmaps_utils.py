@@ -159,6 +159,10 @@ def add_configmap_entries(uncommented_lines, configmap_options):
     if not data_section_found:
         new_lines.append('data:\n')
 
+    # Ensure the last line has a newline if it doesn't
+    if new_lines and new_lines[-1].strip() != '' and data_section_found:
+        new_lines[-1] += '\n'
+
     # Second pass: add new entries
     for config_key, config_value in configmap_options.items():
         uppercase_key = config_key.upper()
@@ -170,7 +174,6 @@ def add_configmap_entries(uncommented_lines, configmap_options):
             else:
                 # This is a predefined entry, use the original value
                 new_lines.append(f'  {uppercase_key}: "{config_value}"\n')
-            last_line_was_data = False
 
     return new_lines
 

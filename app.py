@@ -5,6 +5,8 @@ from utils.eks_handler import handle_eks_yaml
 import random
 import time
 
+# pyinstaller --onefile --add-data "templates:templates" --name EKS_Configurator app.py
+
 # Set up logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -51,9 +53,49 @@ def get_ingress_path():
     ingress_path = input("e.g. '/your-microservice/api' : ").strip()
     return ingress_path
 
-def get_configmap_options():
-    print("Please select the Configmap options you want to include:")
+def get_options(prompt, options_dict, custom_option_name):
+    """
+    Generic function to get options from the user, including handling custom options.
 
+    Args:
+        prompt (str): The prompt to display to the user.
+        options_dict (dict): A dictionary of pre-defined options.
+        custom_option_name (str): The name of the custom option.
+
+    Returns:
+        dict: A dictionary of selected options.
+    """
+    print(prompt)
+
+    for key, (option_name, _) in options_dict.items():
+        print(f"{key}. {option_name}")
+
+    selected_options = input("\nEnter the numbers of the options you want to add, separated by commas (e.g., 1,3,5): ").strip()
+    selected_keys = [key.strip() for key in selected_options.split(',')]
+
+    selected_inputs = {}
+    invalid_keys = []
+
+    for key in selected_keys:
+        if key in options_dict:
+            option_name, default_value = options_dict[key]
+            if option_name == custom_option_name:
+                custom_keys_input = input(f"\nEnter the custom {custom_option_name.lower()} key(s), separated by commas: ").strip().upper()
+                custom_keys = [k.strip() for k in custom_keys_input.split(',')]
+                for custom_key in custom_keys:
+                    selected_inputs[custom_key] = "{{" + custom_key + "}}"
+            else:
+                selected_inputs[option_name.upper()] = default_value
+        else:
+            invalid_keys.append(key)
+
+    if invalid_keys:
+        print(f"Invalid option(s) entered: {', '.join(invalid_keys)}. Please select valid options.")
+
+    return selected_inputs
+
+
+def get_configmap_options():
     configmap_options = {
         '0': ('Other Custom config-map', "Custom"),
         '1': ('API_PATH', "{{apiPath}}"),
@@ -68,52 +110,24 @@ def get_configmap_options():
         '10': ('MAX_LIFETIME', "{{maxLifetime}}"),
         '11': ('CONNECTION_TIMEOUT', "{{connectionTimeout}}")
     }
+    return get_options(
+        "Please select the Configmap options you want to include:",
+        configmap_options,
+        'Other Custom config-map'
+    )
 
-    for key, (option_name, _) in configmap_options.items():
-        print(f"{key}. {option_name}")
-
-    selected_options = input("\nEnter the numbers of the options you want to add, separated by commas (e.g., 1,3,5): ").strip()
-    selected_keys = [key.strip() for key in selected_options.split(',')]
-    
-    configmap_inputs = {}
-
-    for key in selected_keys:
-        if key in configmap_options:
-            option_name, default_value = configmap_options[key]
-            if option_name == 'Other Custom config-map':
-                custom_key = input("\nEnter the custom config-map key(e.g. CUSTOM_ID): ").strip().upper()
-                configmap_inputs[custom_key] = "{{" + custom_key + "}}"
-            else:
-                configmap_inputs[option_name.upper()] = default_value
-
-    return configmap_inputs
 
 def get_secretmap_options():
-    print("Please select the Secret options you want to include:")
-
     secretmap_options = {
         '0': ('Other Custom Secret', "Custom secret"),
         '1': ('DB_PASSWORD', "{{dbPassword}}")
     }
+    return get_options(
+        "Please select the Secret options you want to include:",
+        secretmap_options,
+        'Other Custom Secret'
+    )
 
-    for key, (option_name, _) in secretmap_options.items():
-        print(f"{key}. {option_name}")
-
-    selected_options = input("\nEnter the numbers of the options you want to add, separated by commas (e.g., 1,2,3): ").strip()
-    selected_keys = [key.strip() for key in selected_options.split(',')]
-    
-    secretmap_inputs = {}
-
-    for key in selected_keys:
-        if key in secretmap_options:
-            option_name, default_value = secretmap_options[key]
-            if option_name == 'Other Custom Secret':
-                custom_key = input("\nEnter the custom secret key(e.g. CUSTOM_SECRET): ").strip()
-                secretmap_inputs[custom_key] = "{{" + custom_key + "}}"
-            else:
-                secretmap_inputs[option_name] = default_value
-
-    return secretmap_inputs
 
 def print_ascii_logo():
     logo = """

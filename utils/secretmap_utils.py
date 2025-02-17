@@ -125,15 +125,26 @@ def ensure_secret_data_section(uncommented_lines, microservice_name, full_file_c
 def add_secretmap_entries(uncommented_lines, secretmap_options):
     new_lines = []
     existing_keys = set()
+    data_section_found = False
 
-    # collect existing keys and copy lines
+    # First pass: collect existing keys and copy lines
     for line in uncommented_lines:
         new_lines.append(line)
-        if ':' in line:
+        if line.strip() == 'data:':
+            data_section_found = True
+        elif data_section_found and ':' in line:
             key = line.split(':')[0].strip()
             existing_keys.add(key)
 
-   # Second pass: add new entries
+    # If data section not found, add it
+    if not data_section_found:
+        new_lines.append('data:\n')
+
+    # Ensure there's a newline before adding new entries if the last line isn't empty
+    if new_lines and new_lines[-1].strip() != '' and data_section_found:
+        new_lines.append('\n')
+
+    # Second pass: add new entries
     for secret_key, _ in secretmap_options.items():
         uppercase_key = secret_key.upper()
         if uppercase_key not in existing_keys:
