@@ -4,6 +4,7 @@ import re
 import os
 import tempfile
 import shutil
+import sys
 
 from utils.configmaps_utils import (
     add_configmap_to_eks_deployment,
@@ -25,6 +26,16 @@ from utils.secretmap_utils import (
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 def handle_eks_yaml(file_path, options, ingress_path=None, configmap_options=None, secretmap_options=None):
     try:
@@ -81,7 +92,8 @@ def get_microservice_name(file_path):
 def add_configuration(file_path, microservice_name, template_path=None, ingress_path=None, configmap_options=None, secretmap_options=None):
     """Add the specified configuration to the YAML file"""
     if template_path:
-        template = load_template(template_path)
+        # Use resource_path here as well
+        template = load_template(resource_path(template_path))
         if not template:
             return
 
@@ -158,10 +170,12 @@ def add_configuration(file_path, microservice_name, template_path=None, ingress_
 def load_template(file_path):
     """Load the YAML template from a file."""
     try:
-        with open(file_path, 'r') as file:
+        # Use resource_path to get the correct path
+        full_path = resource_path(file_path)
+        with open(full_path, 'r') as file:
             return file.read()
     except FileNotFoundError:
-        logger.error(f"File '{file_path}' not found.")
+        logger.error(f"File '{full_path}' not found.")
         return None
 
 def update_azure_pipeline_serviceaccount(file_path, add_service_account=False):

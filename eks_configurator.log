@@ -1,0 +1,29 @@
+2024-09-09 14:46:20,360 - root - INFO - Current Directory: C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator
+2024-09-09 14:46:20,360 - root - INFO - Looking for file: C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:47:31,596 - utils.eks_handler - INFO - Added configuration from templates/service-account.yaml to C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:47:31,596 - root - INFO - Configurations added successfully!
+2024-09-09 14:47:31,600 - utils.eks_handler - INFO - Updated Azure pipeline CD file with awsAccountRoleArn for ServiceAccount
+2024-09-09 14:47:31,627 - utils.eks_handler - INFO - Added configuration from templates/ingress.yaml to C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:47:31,627 - root - INFO - Configurations added successfully!
+2024-09-09 14:47:31,627 - utils.eks_handler - INFO - Updated Azure pipeline CD file: azure-pipeline-CD.yaml
+2024-09-09 14:47:31,627 - root - INFO - Configurations added successfully!
+2024-09-09 14:49:06,508 - utils.configmaps_utils - WARNING - No valid ConfigMap name found in eks-config-maps.yaml
+2024-09-09 14:49:06,568 - utils.configmaps_utils - INFO - ConfigMap entries added to the container specification in C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:49:06,568 - utils.eks_handler - INFO - ConfigMap entries added successfully to C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-config-maps.yaml
+2024-09-09 14:49:06,601 - utils.configmaps_utils - INFO - Updated Azure pipeline CD file with config map: azure-pipeline-CD.yaml
+2024-09-09 14:49:06,602 - root - INFO - Configurations added successfully!
+2024-09-09 14:51:20,163 - utils.configmaps_utils - INFO - ConfigMap entries added to the container specification in C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:51:20,165 - utils.eks_handler - INFO - ConfigMap entries added successfully to C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-config-maps.yaml
+2024-09-09 14:51:20,168 - utils.configmaps_utils - INFO - Updated Azure pipeline CD file with config map: azure-pipeline-CD.yaml
+2024-09-09 14:51:20,168 - root - INFO - Configurations added successfully!
+2024-09-09 14:54:45,983 - utils.secretmap_utils - WARNING - No valid Secret name found in eks-config-secrets.yaml
+2024-09-09 14:54:46,032 - utils.secretmap_utils - INFO - Secret entries added to the container specification in C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:54:46,034 - utils.eks_handler - INFO - Secret entries added successfully to C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-config-secrets.yaml
+2024-09-09 14:54:46,036 - utils.secretmap_utils - INFO - Updated Azure pipeline CD file with secrets: azure-pipeline-CD.yaml
+2024-09-09 14:54:46,036 - root - INFO - Configurations added successfully!
+2024-09-09 14:57:47,243 - utils.configmaps_utils - INFO - ConfigMap entries added to the container specification in C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
+2024-09-09 14:57:47,243 - utils.eks_handler - INFO - ConfigMap entries added successfully to C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-config-maps.yaml
+2024-09-09 14:57:47,256 - utils.configmaps_utils - INFO - Updated Azure pipeline CD file with config map: azure-pipeline-CD.yaml
+2024-09-09 14:57:47,256 - root - INFO - Configurations added successfully!
+2024-09-09 15:11:01,472 - root - INFO - Current Directory: C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator
+2024-09-09 15:11:01,472 - root - INFO - Looking for file: C:\Users\320238972\OneDrive - Philips\Rishika\code\clone\EKS-Deployment-Configurator\eks-deployment.yaml
